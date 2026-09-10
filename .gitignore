@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Playwright
+/test-results/
+/playwright/.cache/
+
+# Cucumber
+/cucumber-report/
+rerun.txt
+@rerun.txt
+
+# Environment
+.env
+.env.local
+
+# Allure
+allure-results/
+allure-report/
+.allure/
+
+# OS
+.DS_Store

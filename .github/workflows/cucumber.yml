@@ -1,0 +1,68 @@
+name: Cucumber Tests
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+
+    # Allure raporunu üreten CLI Java ile çalışır
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright browser (chromium)
+      run: npm run install:browsers
+
+    - name: Run Cucumber tests
+      run: npm run test:ci
+      env:
+        # .env dosyası repoya gönderilmediği için CI değerleri buradan verilir
+        BASE_URL: https://www.saucedemo.com
+        USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
+        HEADLESS: 'true'
+        SLOW_MO: '0'
+
+    # Trend grafiğinin çalışması için önceki koşumun geçmişi geri yüklenir
+    - name: Restore Allure history
+      if: ${{ !cancelled() }}
+      uses: actions/cache@v4
+      with:
+        path: allure-report/history
+        key: allure-history-${{ github.run_id }}
+        restore-keys: allure-history-
+
+    - name: Generate Allure report
+      if: ${{ !cancelled() }}
+      run: |
+        if [ -d allure-report/history ]; then cp -r allure-report/history allure-results/history; fi
+        npm run allure:generate
+
+    - name: Upload Allure report
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-report
+        path: allure-report/
+        retention-days: 30
+
+    - name: Upload Cucumber HTML report
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: cucumber-report
+        path: cucumber-report/
+        retention-days: 30
