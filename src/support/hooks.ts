@@ -14,6 +14,7 @@ import {
 import { chromium, Browser } from '@playwright/test';
 
 import { ENV } from '../../config/env';
+import { Constants } from '../../constants/Constants';
 import { CustomWorld } from './world';
 
 /**
@@ -40,8 +41,15 @@ AfterAll(async function () {
   await browser?.close();
 });
 
-Before(async function (this: CustomWorld) {
+Before(async function (this: CustomWorld, scenario: ITestCaseHookParameter) {
   await this.init(browser);
+
+  /* @slow etiketli senaryolar (örn. performance_glitch_user) doğaları gereği
+     yavaştır; assertion süresini yalnızca onlar için yükseltiyoruz.
+     Diğer senaryolar ENV.EXPECT_TIMEOUT ile hızlı fail etmeye devam eder. */
+  if (scenario.pickle.tags.some((tag) => tag.name === '@slow')) {
+    this.setExpectTimeout(Constants.TIMEOUTS.LONG);
+  }
 
   /* Her senaryonun ortak ilk adımı: login ekranını aç.
      (Allure severity tag'lerden, feature/story ise .feature dosyasından

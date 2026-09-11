@@ -4,7 +4,7 @@
   Yapay gecikmeli kullanıcının, Playwright'ın otomatik beklemeleri sayesinde
   satın alma akışını sabit bekleme olmadan tamamlayabilmesi.
 
-  @severity:normal
+  @slow @severity:normal
   Senaryo: Yavaş kullanıcı giriş yapıp ürün satın alır
     Diyelim ki login sayfasındayım
     Eğer ki "yavaş" kullanıcısı ile giriş yaparım

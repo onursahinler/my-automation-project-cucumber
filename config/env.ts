@@ -38,6 +38,18 @@ export const ENV = {
   ACTION_TIMEOUT: toNumber(process.env.ACTION_TIMEOUT, 15_000),
   TEST_TIMEOUT: toNumber(process.env.TEST_TIMEOUT, 60_000),
 
+  /**
+   * Assertion (expect) süre limiti — ACTION_TIMEOUT'tan KASITLI olarak ayrı.
+   * `context.setDefaultTimeout()` yalnızca aksiyonları (click/fill/goto) etkiler;
+   * `expect(locator).toBeVisible()` gibi doğrulamalar Playwright'ın sabit 5s
+   * varsayılanını kullanır. Bu değer o varsayılanın yerine geçer.
+   *
+   * Neden action'dan düşük: "buton tıklanabilir hale gelsin" uzun beklenebilir,
+   * ama "beklenen sonuç ekranda mı" sorusu geç fail ederse gerçek hatayı
+   * görmen gecikir.
+   */
+  EXPECT_TIMEOUT: toNumber(process.env.EXPECT_TIMEOUT, 10_000),
+
   /** Koşum ayarları */
   RETRIES: toNumber(process.env.RETRIES, 0),
   IS_CI: !!process.env.CI,

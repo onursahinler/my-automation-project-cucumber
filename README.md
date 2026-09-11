@@ -145,9 +145,38 @@ Bu Given adımı `src/step-definitions/common.steps.ts` içinde `world.loginAndL
 | `USER_PASSWORD` | `secret_sauce` | Geçerli kullanıcıların parolası |
 | `HEADLESS` | `true` | Tarayıcı arka planda mı koşsun |
 | `SLOW_MO` | `0` | Her adım arası gecikme (ms) — debug için |
-| `ACTION_TIMEOUT` | `15000` | Tek bir aksiyonun süre limiti (ms) |
+| `ACTION_TIMEOUT` | `15000` | Tek bir aksiyonun (`click`, `fill`, `goto`) süre limiti (ms) |
 | `TEST_TIMEOUT` | `60000` | Tek bir senaryonun süre limiti (ms) |
+| `EXPECT_TIMEOUT` | `10000` | Tek bir assertion'ın (`expect`) süre limiti (ms) — bkz. [Assertion timeout yönetimi](#assertion-timeout-yönetimi) |
 | `RETRIES` | `0` | Başarısız senaryonun tekrar deneme sayısı (CI'da 2) |
+
+### Assertion timeout yönetimi
+
+Playwright'ta **aksiyon** timeout'u ile **assertion** timeout'u ayrı çalışır:
+`context.setDefaultTimeout()` yalnızca `click`/`fill`/`goto` gibi aksiyonları etkiler;
+`expect(locator).toBeVisible()` ise Playwright'ın sabit 5 sn varsayılanını kullanır.
+Bu proje o varsayılanı üç kademede yönetir:
+
+| Kademe | Nerede | Ne zaman kullanılır |
+|---|---|---|
+| **1. Global** | `.env` → `EXPECT_TIMEOUT` → `BasePage`'te `expect.configure()` | Tüm assertion'ların varsayılanı. Ortama göre değişir (local vs CI). |
+| **2. Assertion bazlı** | `BasePage` metodlarının opsiyonel son parametresi | Tek bir doğrulama doğası gereği yavaşsa |
+| **3. Senaryo bazlı** | Gherkin `@slow` etiketi → `hooks.ts` → `World.setExpectTimeout()` | Senaryonun tamamı yavaşsa (örn. `performance_glitch_user`) |
+
+```ts
+// 2. kademe — yalnızca bu assertion için
+await this.expectVisible(this.inventoryList, Constants.TIMEOUTS.LONG);
+```
+
+```gherkin
+# 3. kademe — bu senaryodaki TÜM assertion'lar 30 sn bekler
+@slow @severity:normal
+Senaryo: Yavaş kullanıcı giriş yapıp ürün satın alır
+```
+
+Kademeler `Constants.TIMEOUTS` (`SHORT` 5s / `MEDIUM` 15s / `LONG` 30s) üzerinden isimlendirilir.
+Assertion varsayılanı (10 sn) aksiyon timeout'undan (15 sn) **kasıtlı olarak düşüktür**:
+beklenen sonuç ekranda değilse testin hızlı fail etmesi, gerçek hatayı erken görmeni sağlar.
 
 ---
 

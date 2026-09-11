@@ -68,6 +68,18 @@ export class CustomWorld extends World {
     this.commonPage = new CommonPage(this.page);
   }
 
+  /**
+   * Bu senaryodaki TÜM sayfa nesnelerinin assertion süre limitini değiştirir.
+   * `@slow` gibi bir tag'e sahip senaryolar için hooks.ts'ten çağrılır —
+   * böylece yavaş olduğu bilinen senaryolar, diğerlerini yavaşlatmadan
+   * daha uzun bekleyebilir.
+   */
+  setExpectTimeout(ms: number): void {
+    [this.loginPage, this.inventoryPage, this.cartPage, this.checkoutPage, this.commonPage].forEach(
+      (page) => page.setExpectTimeout(ms),
+    );
+  }
+
   /* ---------------- Ortak akış yardımcıları ---------------- */
 
   /** Her senaryonun ortak ilk adımı: login ekranını aç */

@@ -1,4 +1,12 @@
-import { Locator, Page, expect } from '@playwright/test';
+import { Locator, Page, expect as baseExpect } from '@playwright/test';
+import { ENV } from '../config/env';
+
+/**
+ * Playwright'ın `expect`'i varsayılan olarak 5 sn bekler ve bu değer
+ * `context.setDefaultTimeout()` ile DEĞİŞMEZ (o yalnızca aksiyonları etkiler).
+ * Bu yüzden assertion'lar için ayrı bir varsayılanı burada tanımlıyoruz.
+ */
+const expect = baseExpect.configure({ timeout: ENV.EXPECT_TIMEOUT });
 
 /**
  * BasePage
@@ -10,12 +18,29 @@ import { Locator, Page, expect } from '@playwright/test';
  *
  * Böylece alt sınıflar sadece KENDİ locator'larını ve KENDİ iş kurallarını tanımlar.
  * `abstract`: doğrudan `new BasePage(page)` yapılamaz, yalnızca miras alınır.
+ *
+ * Assertion timeout'u üç kademeli yönetilir:
+ *   1) Global varsayılan  -> ENV.EXPECT_TIMEOUT (.env)
+ *   2) Senaryo bazlı      -> setExpectTimeout() (örn. @slow tag'i, bkz. hooks.ts)
+ *   3) Assertion bazlı    -> her metodun son parametresi (örn. Constants.TIMEOUTS.LONG)
  */
 export abstract class BasePage {
   protected readonly page: Page;
 
+  /** Bu sayfa nesnesinin assertion'ları için geçerli süre limiti (ms) */
+  protected expectTimeout: number = ENV.EXPECT_TIMEOUT;
+
   constructor(page: Page) {
     this.page = page;
+  }
+
+  /**
+   * Bu sayfanın tüm assertion'larının varsayılan süresini değiştirir.
+   * Senaryo bazlı ayar için kullanılır (bkz. CustomWorld.setExpectTimeout).
+   */
+  setExpectTimeout(ms: number): this {
+    this.expectTimeout = ms;
+    return this;
   }
 
   /* ---------------- Navigasyon ---------------- */
@@ -30,8 +55,8 @@ export abstract class BasePage {
   }
 
   /** Aktif sayfanın URL'ini doğrular */
-  async expectUrl(url: string | RegExp) {
-    await expect(this.page).toHaveURL(url);
+  async expectUrl(url: string | RegExp, timeout: number = this.expectTimeout) {
+    await expect(this.page).toHaveURL(url, { timeout });
   }
 
   async getTitle(): Promise<string> {
@@ -56,29 +81,39 @@ export abstract class BasePage {
     return (await locator.innerText()).trim();
   }
 
-  /* ---------------- Doğrulama (Assertion) ---------------- */
+  /* ---------------- Doğrulama (Assertion) ----------------
+   *
+   * Her metodun son parametresi opsiyonel `timeout`'tur. Verilmezse
+   * `this.expectTimeout` (senaryo/global varsayılan) kullanılır; verilirse
+   * yalnızca o assertion için geçerli olur:
+   *     await this.expectVisible(this.inventoryList, Constants.TIMEOUTS.LONG);
+   */
 
-  async expectVisible(locator: Locator) {
-    await expect(locator).toBeVisible();
+  async expectVisible(locator: Locator, timeout: number = this.expectTimeout) {
+    await expect(locator).toBeVisible({ timeout });
   }
 
-  async expectHidden(locator: Locator) {
-    await expect(locator).toBeHidden();
+  async expectHidden(locator: Locator, timeout: number = this.expectTimeout) {
+    await expect(locator).toBeHidden({ timeout });
   }
 
   /** Elementin görünür olduğunu VE metninin birebir eşleştiğini doğrular */
-  async expectText(locator: Locator, expected: string) {
-    await expect(locator).toBeVisible();
-    await expect(locator).toHaveText(expected);
+  async expectText(locator: Locator, expected: string, timeout: number = this.expectTimeout) {
+    await expect(locator).toBeVisible({ timeout });
+    await expect(locator).toHaveText(expected, { timeout });
   }
 
   /** Elementin görünür olduğunu VE metni İÇERDİĞİNİ doğrular */
-  async expectContainsText(locator: Locator, expected: string) {
-    await expect(locator).toBeVisible();
-    await expect(locator).toContainText(expected);
+  async expectContainsText(
+    locator: Locator,
+    expected: string,
+    timeout: number = this.expectTimeout,
+  ) {
+    await expect(locator).toBeVisible({ timeout });
+    await expect(locator).toContainText(expected, { timeout });
   }
 
-  async expectCount(locator: Locator, expected: number) {
-    await expect(locator).toHaveCount(expected);
+  async expectCount(locator: Locator, expected: number, timeout: number = this.expectTimeout) {
+    await expect(locator).toHaveCount(expected, { timeout });
   }
 }
