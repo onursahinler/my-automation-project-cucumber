@@ -18,7 +18,10 @@ const { ENV } = require('./config/env');
 const common = {
   requireModule: ['ts-node/register/transpile-only'],
   require: ['src/support/**/*.ts', 'src/step-definitions/**/*.ts'],
-  paths: ['features/**/*.feature'],
+  /* `paths` kasıtlı olarak burada TANIMLANMADI: cucumber-js zaten
+     varsayılan olarak `features/` klasörünü tarar. Config'te path
+     tanımlarsak, CLI'dan verilen path (örn. `cucumber-js features/login.feature`)
+     bununla BİRLEŞİYOR ve tüm testler de çalışıyor — istenen değil. */
   formatOptions: {
     snippetInterface: 'async-await',
     // ----- Allure (allure-cucumberjs/reporter) -----
