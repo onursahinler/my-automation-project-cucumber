@@ -19,5 +19,9 @@ allure-results/
 allure-report/
 .allure/
 
+# Editör
+.vscode/
+.idea/
+
 # OS
 .DS_Store

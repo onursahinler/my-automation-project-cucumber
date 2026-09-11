@@ -90,5 +90,13 @@ After(async function (this: CustomWorld, scenario: ITestCaseHookParameter) {
         /* video kaydı yoksa yok say */
       }
     }
+  } else if (video) {
+    /* Senaryo geçtiyse videoyu diskten SİL.
+       recordVideo context açılırken başlamak zorunda (geriye dönük kayıt
+       mümkün değil), ama pass eden senaryonun videosu saklanmaz — yoksa
+       her koşumda her senaryo için bir .webm birikir. */
+    await video.delete().catch(() => {
+      /* dosya zaten yoksa yok say */
+    });
   }
 });
