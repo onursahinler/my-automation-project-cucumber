@@ -1,15 +1,13 @@
 import { When, Then } from '@cucumber/cucumber';
 import { CustomWorld } from '../support/world';
-import { Constants } from '../../constants/Constants';
 
 /**
  * Sepet (cart) adımları: sepete gitme, ürün çıkarma, adet doğrulaması,
- * checkout'a geçiş.
+ * checkout'a geçiş. URL doğrulamaları ilgili Page Object aksiyonlarının içindedir.
  */
 
 When('sepete giderim', async function (this: CustomWorld) {
   await this.commonPage.goToCart();
-  await this.cartPage.expectUrl(Constants.URLS.CART);
 });
 
 When('alışverişe devam ederim', async function (this: CustomWorld) {
@@ -17,7 +15,6 @@ When('alışverişe devam ederim', async function (this: CustomWorld) {
 });
 
 When('ödeme sürecini başlatırım', async function (this: CustomWorld) {
-  await this.cartPage.expectUrl(Constants.URLS.CART);
   await this.cartPage.proceedToCheckout();
 });
 

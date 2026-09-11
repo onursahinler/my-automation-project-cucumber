@@ -28,8 +28,12 @@ export class LoginPage extends BasePage {
     await this.click(this.loginButton);
   }
 
-  /** Login ekranının yüklendiğini doğrular */
+  /**
+   * Login sayfasında olunduğunu VE ekranın yüklendiğini doğrular.
+   * URL kontrolü de burada olduğu için adım tanımlarında ayrıca gerekmez.
+   */
   async verifyPageLoaded() {
+    await this.expectUrl(Constants.URLS.LOGIN);
     await this.expectVisible(this.loginButton);
   }
 

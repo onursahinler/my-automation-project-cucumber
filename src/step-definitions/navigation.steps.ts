@@ -3,16 +3,11 @@ import { CustomWorld } from '../support/world';
 
 /**
  * Yan menü (sidebar) ve header navigasyon adımları.
+ * Menü etiketi -> aksiyon eşlemesi CommonPage'tedir; burada dallanma yoktur.
  */
 
 When('yan menüden {string} seçeneğine tıklarım', async function (this: CustomWorld, item: string) {
-  switch (item) {
-    case 'All Items':
-      await this.commonPage.navigateToAllItems();
-      break;
-    default:
-      throw new Error(`Tanımsız yan menü seçeneği: "${item}"`);
-  }
+  await this.commonPage.navigateToSidebarItem(item);
 });
 
 When('yan menüyü açarım', async function (this: CustomWorld) {
@@ -28,9 +23,9 @@ When('çıkış yaparım', async function (this: CustomWorld) {
 });
 
 Then('yan menü görünür', async function (this: CustomWorld) {
-  await this.commonPage.expectVisible(this.commonPage.allItemsLink);
+  await this.commonPage.verifyMenuOpen();
 });
 
 Then('yan menü görünmez', async function (this: CustomWorld) {
-  await this.commonPage.expectHidden(this.commonPage.allItemsLink);
+  await this.commonPage.verifyMenuClosed();
 });

@@ -7,10 +7,10 @@ import {
 import { Browser, BrowserContext, Page } from '@playwright/test';
 
 import { ENV } from '../../config/env';
-import { Constants } from '../../constants/Constants';
 import { Credentials } from '../../data/users';
 import { userByRole } from '../../data/userByRole';
-import { CustomerInfo } from '../../utils/DataFactory';
+import { CustomerInfo, DataFactory } from '../../utils/DataFactory';
+import { AllureHelper } from '../../utils/AllureHelper';
 
 import { LoginPage } from '../../pages/LoginPage';
 import { InventoryPage } from '../../pages/InventoryPage';
@@ -20,6 +20,9 @@ import { CommonPage } from '../../pages/CommonPage';
 
 /* Bir senaryonun toplam süre limiti (.env -> TEST_TIMEOUT) */
 setDefaultTimeout(ENV.TEST_TIMEOUT);
+
+/** Tüm senaryoların Allure'daki üst gruplaması */
+const EPIC = 'Sauce Demo E-Ticaret';
 
 /**
  * CustomWorld
@@ -95,8 +98,36 @@ export class CustomWorld extends World {
   /** Giriş yapar ve inventory sayfasına ulaşıldığını doğrular (Playwright'taki `loginAs`) */
   async loginAndLandOnInventory(user: Credentials): Promise<void> {
     await this.loginAs(user);
-    await this.inventoryPage.expectUrl(Constants.URLS.INVENTORY);
     await this.inventoryPage.verifyPageLoaded();
+  }
+
+  /* ---------------- Senaryo başlangıçları ----------------
+   * Allure "epic" etiketi bir ADIM içinden verilmelidir (Before hook'undan
+   * verilirse teste değil fixture'a bağlanır). Bu yüzden raporlama endişesi
+   * adım tanımına sızmasın diye buraya alındı.
+   */
+
+  /** Senaryo login ekranında başlar */
+  async startOnLoginPage(): Promise<void> {
+    await AllureHelper.meta({ epic: EPIC });
+    await this.loginPage.verifyPageLoaded();
+  }
+
+  /** Senaryo, standart kullanıcı ile giriş yapılmış halde başlar */
+  async startAsStandardUser(): Promise<void> {
+    await AllureHelper.meta({ epic: EPIC });
+    await this.loginAndLandOnInventory(this.resolveUser('standart'));
+  }
+
+  /**
+   * Checkout formunu Faker ile üretilen rastgele müşteri bilgisiyle doldurur.
+   * Üretilen veri, rastgele veriyle fail durumunda izlenebilirlik için
+   * Allure raporuna JSON olarak eklenir.
+   */
+  async fillCheckoutInformation(): Promise<void> {
+    this.customer = DataFactory.customerInfo();
+    await AllureHelper.attachJson('Üretilen müşteri bilgisi', this.customer);
+    await this.checkoutPage.fillInformation(this.customer);
   }
 
   /* ---------------- Küçük yardımcılar ---------------- */

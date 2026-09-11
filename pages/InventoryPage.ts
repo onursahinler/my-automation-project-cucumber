@@ -16,8 +16,13 @@ export class InventoryPage extends BasePage {
     this.shoppingCartBadge = page.locator('[data-test="shopping-cart-badge"]');
   }
 
-  /** Ürün listesinin render edildiğini doğrular (yavaş kullanıcılar için kritik) */
+  /**
+   * Envanter sayfasında olunduğunu VE ürün listesinin render edildiğini doğrular.
+   * URL kontrolü de burada olduğu için adım tanımlarında ayrıca gerekmez.
+   * (Yavaş kullanıcılar için kritik — bkz. @slow etiketi.)
+   */
   async verifyPageLoaded() {
+    await this.expectUrl(Constants.URLS.INVENTORY);
     await this.expectVisible(this.inventoryList);
     await this.expectVisible(this.inventoryItems.first());
   }
@@ -32,14 +37,31 @@ export class InventoryPage extends BasePage {
     await this.selectOption(this.productSortSelect, Constants.SORT_OPTIONS.PRICE_LOW_TO_HIGH);
   }
 
-  // Belirli sıradaki ürünün adını döndürür
-  async getProductNameByIndex(index: number): Promise<string> {
+  // Belirli sıradaki ürünün adını döndürür (0-tabanlı, sınıf içi kullanım)
+  private async getProductNameByIndex(index: number): Promise<string> {
     return this.getText(this.inventoryItems.nth(index).locator('[data-test="inventory-item-name"]'));
   }
 
-  // Belirli sıradaki ürünü sepete ekler
-  async addProductToCartByIndex(index: number) {
+  // Belirli sıradaki ürünü sepete ekler (0-tabanlı, sınıf içi kullanım)
+  private async addProductToCartByIndex(index: number) {
     await this.click(this.inventoryItems.nth(index).locator('button:has-text("Add to cart")'));
+  }
+
+  /**
+   * Listedeki N. sıradaki ürünü sepete ekler (1-tabanlı — senaryodaki
+   * "1. sıradaki ürün" ifadesiyle birebir örtüşür).
+   * 0-tabanlı index dönüşümü burada yapılır, adım tanımında değil.
+   */
+  async addProductToCartByPosition(position: number) {
+    await this.addProductToCartByIndex(position - 1);
+  }
+
+  /**
+   * Pahalıdan ucuza sıralı listede, ilk `count` ürünün EN UCUZUNUN adını döndürür.
+   * "İlk N'in en ucuzu = (N-1). index" bilgisi bu sayfanın domain bilgisidir.
+   */
+  async getCheapestProductNameAmongTop(count: number): Promise<string> {
+    return this.getProductNameByIndex(count - 1);
   }
 
   // Ürün adına göre sepete ekler

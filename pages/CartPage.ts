@@ -14,9 +14,10 @@ export class CartPage extends BasePage {
     this.cartItems = page.locator('[data-test="inventory-item"]');
   }
 
-  // Checkout sayfasına ilerle
+  // Checkout sayfasına ilerle (hedefe ulaşıldığı doğrulanır)
   async proceedToCheckout() {
     await this.click(this.checkoutButton);
+    await this.expectUrl(Constants.URLS.CHECKOUT_STEP_ONE);
   }
 
   // Inventory sayfasına geri dön
